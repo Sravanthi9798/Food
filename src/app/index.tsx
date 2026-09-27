@@ -19,7 +19,7 @@ export default function SplashScreen() {
         Fresh groceries, delivered to your door
       </Text>
 
-      <Text style={styles.loading}>Loading...</Text>
+      {/* <Text style={styles.loading}>Loading...</Text> */}
     </View>
   );
 }

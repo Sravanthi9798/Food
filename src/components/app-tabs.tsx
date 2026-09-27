@@ -30,7 +30,7 @@ export default function AppTabs() {
 
       {/* EXPLORE */}
       <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Categories</NativeTabs.Trigger.Label>
 
         <NativeTabs.Trigger.Icon md="explore" />
       </NativeTabs.Trigger>

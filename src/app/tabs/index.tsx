@@ -4,14 +4,14 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    View
+    View,
 } from "react-native";
 
 export default function HomeScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
-      <Text style={styles.title}>Hello 👋</Text>
+      <Text style={styles.title}>Hello</Text>
 
       <Text style={styles.subtitle}>What do you want to buy today?</Text>
 
