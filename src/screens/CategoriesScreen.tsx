@@ -1,3 +1,4 @@
+import PageHeader from "@/components/PageHearder";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 const categories = [
@@ -6,34 +7,33 @@ const categories = [
   { name: "Dairy", emoji: "🥛" },
   { name: "Bakery", emoji: "🍞" },
   { name: "Meat", emoji: "🥩" },
-  { name: "Fish", emoji: "🐟" },
   { name: "Snacks", emoji: "🍿" },
-  { name: "Beverages", emoji: "🥤" },
-  { name: "Frozen Foods", emoji: "🧊" },
-  { name: "Rice & Grains", emoji: "🍚" },
-  { name: "Spices", emoji: "🌶️" },
-  { name: "Household", emoji: "🧹" },
 ];
 
-export default function ExploreScreen() {
+export default function CategoriesScreen() {
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Categories</Text>
+    <View style={styles.container}>
+      <PageHeader title="Categories" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.body}>
+          <Text style={styles.subtitle}>Explore our grocery categories</Text>
+        </View>
+        <View style={styles.grid}>
+          {categories.map((category) => (
+            <View key={category.name} style={styles.category}>
+              <View style={styles.iconContainer}>
+                <Text style={styles.emoji}>{category.emoji}</Text>
+              </View>
 
-      <Text style={styles.subtitle}>Explore our grocery categories</Text>
-
-      <View style={styles.grid}>
-        {categories.map((category) => (
-          <View key={category.name} style={styles.category}>
-            <View style={styles.iconContainer}>
-              <Text style={styles.emoji}>{category.emoji}</Text>
+              <Text style={styles.categoryName}>{category.name}</Text>
             </View>
-
-            <Text style={styles.categoryName}>{category.name}</Text>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -41,9 +41,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    padding: 20,
   },
 
+  content: {
+    paddingBottom: 20,
+  },
+
+  body: {
+    paddingHorizontal: 15,
+  },
+
+  subtitle: {
+    fontSize: 15,
+    color: "#777",
+  },
   title: {
     fontSize: 28,
     fontWeight: "700",
@@ -51,21 +62,15 @@ const styles = StyleSheet.create({
     color: "#222",
   },
 
-  subtitle: {
-    fontSize: 15,
-    color: "#777",
-    marginTop: 6,
-    marginBottom: 25,
-  },
-
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    padding: 16,
   },
 
   category: {
-    width: "31%",
+    width: "48%",
     backgroundColor: "#E8F5E9",
     borderRadius: 14,
     paddingVertical: 16,

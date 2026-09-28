@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 export default function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/tabs/explore");
+      router.replace("/tabs/home");
     }, 3000);
 
     return () => clearTimeout(timer);

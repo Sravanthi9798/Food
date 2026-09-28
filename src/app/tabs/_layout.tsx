@@ -21,31 +21,23 @@ export default function TabsLayout() {
         },
       }}
     >
-      {/* HOME */}
-      <NativeTabs.Trigger name="index" labelVisibilityMode="labeled">
+      <NativeTabs.Trigger name="home" labelVisibilityMode="labeled">
         <NativeTabs.Trigger.Icon md="home" />
-
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      {/* EXPLORE */}
-      <NativeTabs.Trigger name="explore" labelVisibilityMode="labeled">
+      <NativeTabs.Trigger name="categories" labelVisibilityMode="labeled">
         <NativeTabs.Trigger.Icon md="explore" />
-
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Categories</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      {/* CART */}
       <NativeTabs.Trigger name="cart" labelVisibilityMode="labeled">
         <NativeTabs.Trigger.Icon md="shopping_cart" />
-
         <NativeTabs.Trigger.Label>Cart</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      {/* PROFILE */}
       <NativeTabs.Trigger name="profile" labelVisibilityMode="labeled">
         <NativeTabs.Trigger.Icon md="person" />
-
         <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>

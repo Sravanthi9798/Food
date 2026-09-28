@@ -4,7 +4,7 @@ export default function AppTabs() {
   return (
     <NativeTabs
       backgroundColor="#FFFFFF"
-      indicatorColor="#E8F5E9"
+      indicatorColor="#9fcba3"
       iconColor={{
         default: "#777777",
         selected: "#2E7D32",
@@ -28,8 +28,8 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon md="home" />
       </NativeTabs.Trigger>
 
-      {/* EXPLORE */}
-      <NativeTabs.Trigger name="explore">
+      {/* CATEGORIES */}
+      <NativeTabs.Trigger name="categories">
         <NativeTabs.Trigger.Label>Categories</NativeTabs.Trigger.Label>
 
         <NativeTabs.Trigger.Icon md="explore" />
