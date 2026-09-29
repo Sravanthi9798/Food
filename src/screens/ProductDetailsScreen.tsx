@@ -32,16 +32,6 @@ export default function ProductDetailsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>‹</Text>
-          </Pressable>
-
-          <Text style={styles.headerTitle}>Product Details</Text>
-
-          <View style={styles.headerPlaceholder} />
-        </View>
 
         {/* Product Image */}
         <View style={styles.imageContainer}>

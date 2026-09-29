@@ -1,10 +1,3 @@
-//   { name: "Fruits", emoji: "🍎" },
-//   { name: "Vegetables", emoji: "🥦" },
-//   { name: "Dairy", emoji: "🥛" },
-//   { name: "Bakery", emoji: "🍞" },
-//   { name: "Meat", emoji: "🥩" },
-//   { name: "Snacks", emoji: "🍿" },
-
 export const products = [
   // FRUITS
   {

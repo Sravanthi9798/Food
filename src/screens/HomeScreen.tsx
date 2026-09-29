@@ -1,29 +1,149 @@
 import Button from "@/components/Button";
-import { products } from "@/data/products";
 import { router } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import {
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 
+const API_URL = "http://10.203.54.11:5000/api/products";
+
+type Product = {
+  _id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string;
+  image: string;
+  description: string;
+  offer: string;
+  stock: number;
+};
+
 export default function HomeScreen() {
-  // Products with offers
-  const offerProducts = products.filter((product) => product.offer);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // First 6 products for bestsellers
-  const bestSellers = products.slice(0, 6);
+  // ================= FETCH PRODUCTS =================
 
-  // First 5 products for today's deals
-  const todaysDeals = products.filter((product) => product.offer).slice(0, 5);
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(API_URL);
 
-  // Temporary recently viewed products
-  // Later we can make this dynamic using AsyncStorage/context.
-  const recentlyViewed = products.slice(2, 7);
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        const data = await response.json();
+
+        setProducts(data);
+      } catch (error) {
+        console.log("Home products error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // ================= PRODUCT GROUPS =================
+
+  const offerProducts = useMemo(() => {
+    return products.filter((product) => product.offer);
+  }, [products]);
+
+  const bestSellers = useMemo(() => {
+    return products.slice(0, 6);
+  }, [products]);
+
+  const todaysDeals = useMemo(() => {
+    return products
+      .filter((product) => product.offer)
+      .slice(0, 5);
+  }, [products]);
+
+  // Temporary recently viewed
+  const recentlyViewed = useMemo(() => {
+    return products.slice(2, 7);
+  }, [products]);
+
+  // ================= SEARCH =================
+
+  const searchResults = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+
+    if (!query) {
+      return [];
+    }
+
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+    );
+  }, [searchText, products]);
+
+  // ================= OPEN PRODUCT =================
+
+  const openProduct = (productId: string) => {
+    router.push({
+      pathname: "/product/[id]",
+      params: {
+        id: productId,
+      },
+    });
+  };
+
+  // ================= SEE ALL =================
+
+  const openBestsellers = () => {
+    router.push({
+      pathname: "/products",
+      params: {
+        type: "bestsellers",
+      },
+    });
+  };
+
+  const openDeals = () => {
+    router.push({
+      pathname: "/products",
+      params: {
+        type: "deals",
+      },
+    });
+  };
+
+  const openAllProducts = () => {
+    router.push("/products");
+  };
+
+  // ================= LOADING =================
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="large"
+          color="#2E7D32"
+        />
+
+        <Text style={styles.loadingText}>
+          Loading products...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -34,122 +154,252 @@ export default function HomeScreen() {
         {/* ================= HEADER ================= */}
 
         <View style={styles.header}>
-          <Text style={styles.title}>Hello</Text>
+          <Text style={styles.title}>
+            FreshCart
+          </Text>
 
-          <Text style={styles.subtitle}>What do you want to buy today?</Text>
+          <Text style={styles.subtitle}>
+            What do you want to buy today?
+          </Text>
         </View>
 
-        {/* Space before sticky search */}
+        {/* ================= SPACE ================= */}
 
         <View style={styles.smallSpace} />
 
-        {/* ================= STICKY SEARCH ================= */}
+        {/* ================= SEARCH ================= */}
 
         <View style={styles.stickySearch}>
           <View style={styles.searchContainer}>
-            <Text style={styles.searchIcon}>⌕</Text>
+            <Text style={styles.searchIcon}>
+              ⌕
+            </Text>
 
             <TextInput
               placeholder='Search "chips"'
               placeholderTextColor="#777"
               style={styles.search}
+              value={searchText}
+              onChangeText={setSearchText}
             />
+
+            {searchText.length > 0 && (
+              <Pressable
+                onPress={() => setSearchText("")}
+              >
+                <Text style={styles.clearSearch}>
+                  ×
+                </Text>
+              </Pressable>
+            )}
           </View>
+
+          {/* ================= SEARCH RESULTS ================= */}
+
+          {searchText.trim().length > 0 && (
+            <View style={styles.searchResultsSection}>
+              <View style={styles.searchResultHeader}>
+                <Text style={styles.sectionTitle}>
+                  Search Results
+                </Text>
+
+                <Text style={styles.resultCount}>
+                  {searchResults.length} products
+                </Text>
+              </View>
+
+              {searchResults.length === 0 ? (
+                <View style={styles.noResults}>
+                  <Text style={styles.noResultsText}>
+                    No products found
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={searchResults}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item._id}
+                  contentContainerStyle={
+                    styles.horizontalContent
+                  }
+                  renderItem={({ item: product }) => (
+                    <Pressable
+                      style={styles.bestsellerCard}
+                      onPress={() =>
+                        openProduct(product._id)
+                      }
+                    >
+                      <Image
+                        source={{
+                          uri: product.image,
+                        }}
+                        style={styles.productImage}
+                        resizeMode="cover"
+                      />
+
+                      <Text
+                        style={styles.productName}
+                        numberOfLines={2}
+                      >
+                        {product.name}
+                      </Text>
+
+                      <Text style={styles.unit}>
+                        {product.unit}
+                      </Text>
+
+                      <View
+                        style={styles.productBottom}
+                      >
+                        <Text style={styles.price}>
+                          ₹{product.price}
+                        </Text>
+
+                        <Pressable
+                          style={styles.addButton}
+                          onPress={(event) => {
+                            event.stopPropagation();
+                          }}
+                        >
+                          <Text style={styles.addText}>
+                            +
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </Pressable>
+                  )}
+                />
+              )}
+            </View>
+          )}
         </View>
 
         {/* ================= SPECIAL OFFERS ================= */}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Special Offers</Text>
+          <Text style={styles.sectionTitle}>
+            Special Offers
+          </Text>
 
-          <Pressable onPress={() => router.push("/products")}>
-            <Text style={styles.seeAll}>See all</Text>
+          <Pressable onPress={openAllProducts}>
+            <Text style={styles.seeAll}>
+              See all
+            </Text>
           </Pressable>
         </View>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalContent}
+          contentContainerStyle={
+            styles.horizontalContent
+          }
         >
-          {offerProducts.slice(0, 3).map((product) => (
-            <Pressable
-              key={product.name}
-              style={styles.offerCard}
-              onPress={() =>
-                router.push({
-                  pathname: "/product/[id]",
-                  params: {
-                    id: String(product.id),
-                  },
-                })
-              }
-            >
-              <View style={styles.offerTextContainer}>
-                <Text style={styles.offerBadge}>{product.offer}</Text>
+          {offerProducts
+            .slice(0, 3)
+            .map((product) => (
+              <Pressable
+                key={product._id}
+                style={styles.offerCard}
+                onPress={() =>
+                  openProduct(product._id)
+                }
+              >
+                <View
+                  style={styles.offerTextContainer}
+                >
+                  <Text style={styles.offerBadge}>
+                    {product.offer}
+                  </Text>
 
-                <Text style={styles.offerTitle}>{product.name}</Text>
+                  <Text
+                    style={styles.offerTitle}
+                    numberOfLines={1}
+                  >
+                    {product.name}
+                  </Text>
 
-                <Text style={styles.offerDescription}>
-                  Fresh and quality products
-                </Text>
+                  <Text
+                    style={styles.offerDescription}
+                  >
+                    Fresh and quality products
+                  </Text>
 
-                <Text style={styles.offerPrice}>₹{product.price}</Text>
+                  <Text style={styles.offerPrice}>
+                    ₹{product.price}
+                  </Text>
 
-                <Button
-                  title="Shop Now"
-                  onPress={() => router.push("/products")}
-                  style={styles.offerButton}
+                  <Button
+                    title="Shop Now"
+                    onPress={openAllProducts}
+                    style={styles.offerButton}
+                  />
+                </View>
+
+                <Image
+                  source={{
+                    uri: product.image,
+                  }}
+                  style={styles.offerImage}
+                  resizeMode="contain"
                 />
-              </View>
-
-              <Image
-                source={{ uri: product.image }}
-                style={styles.offerImage}
-                resizeMode="contain"
-              />
-            </Pressable>
-          ))}
+              </Pressable>
+            ))}
         </ScrollView>
 
         {/* ================= BESTSELLERS ================= */}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Bestsellers</Text>
+          <Text style={styles.sectionTitle}>
+            Bestsellers
+          </Text>
 
-          <Pressable onPress={() => router.push("/products")}>
-            <Text style={styles.seeAll}>See all</Text>
+          <Pressable onPress={openBestsellers}>
+            <Text style={styles.seeAll}>
+              See all
+            </Text>
           </Pressable>
         </View>
 
-        <View style={styles.products}>
-          {bestSellers.map((product) => (
+        <FlatList
+          data={bestSellers}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={
+            styles.horizontalContent
+          }
+          renderItem={({ item: product }) => (
             <Pressable
-              key={product.name}
-              style={styles.dealCard}
+              style={styles.bestsellerCard}
               onPress={() =>
-                router.push({
-                  pathname: "/product/[id]",
-                  params: {
-                    id: String(product.id),
-                  },
-                })
+                openProduct(product._id)
               }
             >
               <Image
-                source={{ uri: product.image }}
+                source={{
+                  uri: product.image,
+                }}
                 style={styles.productImage}
                 resizeMode="cover"
               />
 
-              <Text style={styles.productName} numberOfLines={2}>
+              <Text
+                style={styles.productName}
+                numberOfLines={2}
+              >
                 {product.name}
               </Text>
 
-              <Text style={styles.unit}>{product.unit}</Text>
+              <Text style={styles.unit}>
+                {product.unit}
+              </Text>
 
               <View style={styles.productBottom}>
-                <Text style={styles.price}>₹{product.price}</Text>
+                <Text style={styles.price}>
+                  ₹{product.price}
+                </Text>
 
                 <Pressable
                   style={styles.addButton}
@@ -157,59 +407,75 @@ export default function HomeScreen() {
                     event.stopPropagation();
                   }}
                 >
-                  <Text style={styles.addText}>+</Text>
+                  <Text style={styles.addText}>
+                    +
+                  </Text>
                 </Pressable>
               </View>
             </Pressable>
-          ))}
-        </View>
+          )}
+        />
 
         {/* ================= TODAY'S DEALS ================= */}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Deals 🔥</Text>
+          <Text style={styles.sectionTitle}>
+            Today's Deals 🔥
+          </Text>
 
-          <Pressable onPress={() => router.push("/products")}>
-            <Text style={styles.seeAll}>See all</Text>
+          <Pressable onPress={openDeals}>
+            <Text style={styles.seeAll}>
+              See all
+            </Text>
           </Pressable>
         </View>
 
-        <ScrollView
+        <FlatList
+          data={todaysDeals}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalContent}
-        >
-          {todaysDeals.map((product) => (
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={
+            styles.horizontalContent
+          }
+          renderItem={({ item: product }) => (
             <Pressable
-              key={product.name}
               style={styles.dealCard}
               onPress={() =>
-                router.push({
-                  pathname: "/product/[id]",
-                  params: {
-                    id: String(product.id),
-                  },
-                })
+                openProduct(product._id)
               }
             >
-              <View style={styles.dealImageContainer}>
-                <Text style={styles.dealBadge}>{product.offer}</Text>
+              <View
+                style={styles.dealImageContainer}
+              >
+                <Text style={styles.dealBadge}>
+                  {product.offer}
+                </Text>
 
                 <Image
-                  source={{ uri: product.image }}
+                  source={{
+                    uri: product.image,
+                  }}
                   style={styles.dealImage}
                   resizeMode="contain"
                 />
               </View>
 
-              <Text style={styles.dealName} numberOfLines={1}>
+              <Text
+                style={styles.dealName}
+                numberOfLines={1}
+              >
                 {product.name}
               </Text>
 
-              <Text style={styles.unit}>{product.unit}</Text>
+              <Text style={styles.unit}>
+                {product.unit}
+              </Text>
 
               <View style={styles.productBottom}>
-                <Text style={styles.price}>₹{product.price}</Text>
+                <Text style={styles.price}>
+                  ₹{product.price}
+                </Text>
 
                 <Pressable
                   style={styles.addButton}
@@ -217,58 +483,66 @@ export default function HomeScreen() {
                     event.stopPropagation();
                   }}
                 >
-                  <Text style={styles.addText}>+</Text>
+                  <Text style={styles.addText}>
+                    +
+                  </Text>
                 </Pressable>
               </View>
             </Pressable>
-          ))}
-        </ScrollView>
+          )}
+        />
 
         {/* ================= RECENTLY VIEWED ================= */}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recently Viewed</Text>
+          <Text style={styles.sectionTitle}>
+            Recently Viewed
+          </Text>
 
           <Pressable>
-            <Text style={styles.seeAll}>See all</Text>
+            <Text style={styles.seeAll}>
+              See all
+            </Text>
           </Pressable>
         </View>
 
-        <ScrollView
+        <FlatList
+          data={recentlyViewed}
           horizontal
           showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={[
             styles.horizontalContent,
             styles.recentBottom,
           ]}
-        >
-          {recentlyViewed.map((product) => (
+          renderItem={({ item: product }) => (
             <Pressable
-              key={product.name}
               style={styles.recentCard}
               onPress={() =>
-                router.push({
-                  pathname: "/product/[id]",
-                  params: {
-                    id: String(product.id),
-                  },
-                })
+                openProduct(product._id)
               }
             >
               <Image
-                source={{ uri: product.image }}
+                source={{
+                  uri: product.image,
+                }}
                 style={styles.recentImage}
                 resizeMode="cover"
               />
 
-              <Text style={styles.recentName} numberOfLines={1}>
+              <Text
+                style={styles.recentName}
+                numberOfLines={1}
+              >
                 {product.name}
               </Text>
 
-              <Text style={styles.price}>₹{product.price}</Text>
+              <Text style={styles.price}>
+                ₹{product.price}
+              </Text>
             </Pressable>
-          ))}
-        </ScrollView>
+          )}
+        />
       </ScrollView>
     </View>
   );
@@ -281,7 +555,18 @@ const styles = StyleSheet.create({
     paddingTop: 30,
   },
 
-  /* ================= HEADER ================= */
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loadingText: {
+    marginTop: 10,
+    color: "#777777",
+    fontSize: 14,
+  },
 
   header: {
     paddingHorizontal: 20,
@@ -291,11 +576,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#222",
+    color: "#369122",
   },
 
   subtitle: {
-    color: "#777",
+    color: "#777777",
     marginTop: 5,
     fontSize: 15,
   },
@@ -303,8 +588,6 @@ const styles = StyleSheet.create({
   smallSpace: {
     height: 15,
   },
-
-  /* ================= SEARCH ================= */
 
   stickySearch: {
     backgroundColor: "#FFFFFF",
@@ -325,7 +608,7 @@ const styles = StyleSheet.create({
 
   searchIcon: {
     fontSize: 30,
-    color: "#333",
+    color: "#333333",
     marginRight: 10,
     transform: [{ rotate: "-20deg" }],
   },
@@ -333,11 +616,44 @@ const styles = StyleSheet.create({
   search: {
     flex: 1,
     fontSize: 16,
-    color: "#222",
+    color: "#222222",
     paddingVertical: 0,
   },
 
-  /* ================= SECTION ================= */
+  clearSearch: {
+    fontSize: 26,
+    color: "#777777",
+    paddingLeft: 10,
+  },
+
+  searchResultsSection: {
+    marginTop: 10,
+    marginBottom: 5,
+  },
+
+  searchResultHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  resultCount: {
+    fontSize: 13,
+    color: "#777777",
+    fontWeight: "500",
+  },
+
+  noResults: {
+    paddingVertical: 25,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  noResultsText: {
+    fontSize: 15,
+    color: "#777777",
+  },
 
   sectionHeader: {
     flexDirection: "row",
@@ -351,7 +667,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#222",
+    color: "#222222",
   },
 
   seeAll: {
@@ -359,8 +675,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  /* ================= SPECIAL OFFERS ================= */
 
   horizontalContent: {
     paddingHorizontal: 20,
@@ -401,14 +715,14 @@ const styles = StyleSheet.create({
 
   offerDescription: {
     fontSize: 11,
-    color: "#555",
+    color: "#555555",
     marginTop: 4,
   },
 
   offerPrice: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#222",
+    color: "#222222",
     marginTop: 6,
   },
 
@@ -426,26 +740,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 
-  /* ================= PRODUCTS ================= */
-
-  products: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-  },
-
-  product: {
-    width: "31.5%",
+  bestsellerCard: {
+    width: 145,
     backgroundColor: "#F8F8F8",
-    borderRadius: 12,
-    padding: 8,
-    marginBottom: 12,
+    borderRadius: 14,
+    padding: 10,
+    marginRight: 12,
   },
 
   productImage: {
     width: "100%",
-    height: 85,
+    height: 110,
     borderRadius: 10,
   },
 
@@ -453,12 +758,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     marginTop: 8,
-    color: "#222",
+    color: "#222222",
   },
 
   unit: {
     fontSize: 10,
-    color: "#777",
+    color: "#777777",
     marginTop: 2,
   },
 
@@ -472,7 +777,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#222",
+    color: "#222222",
   },
 
   addButton: {
@@ -489,8 +794,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 22,
   },
-
-  /* ================= TODAY'S DEALS ================= */
 
   dealCard: {
     width: 145,
@@ -532,10 +835,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     marginTop: 8,
-    color: "#222",
+    color: "#222222",
   },
-
-  /* ================= RECENTLY VIEWED ================= */
 
   recentCard: {
     width: 120,
@@ -554,7 +855,7 @@ const styles = StyleSheet.create({
   recentName: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#222",
+    color: "#222222",
     marginTop: 7,
     marginBottom: 3,
   },
